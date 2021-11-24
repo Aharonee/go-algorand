@@ -73,10 +73,10 @@ func TestSignerCreation(t *testing.T) {
 	testSignerNumKeysLimits(crypto.FalconType, 0, 0, 0)
 	testSignerNumKeysLimits(crypto.FalconType, 0, 1, 1)
 	updatedParams.CompactCertRounds = 2
-	config.Consensus[protocol.ConsensusFuture] = updatedParams	
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
 	testSignerNumKeysLimits(crypto.FalconType, 2, 2, 1)
 	updatedParams.CompactCertRounds = 10
-	config.Consensus[protocol.ConsensusFuture] = updatedParams	
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
 	testSignerNumKeysLimits(crypto.FalconType, 8, 21, 2)
 	testSignerNumKeysLimits(crypto.FalconType, 8, 20, 2)
 	testSignerNumKeysLimits(crypto.FalconType, 10, 21, 2)
@@ -84,14 +84,14 @@ func TestSignerCreation(t *testing.T) {
 	testSignerNumKeysLimits(crypto.FalconType, 11, 20, 1)
 
 	updatedParams.CompactCertRounds = 1
-	config.Consensus[protocol.ConsensusFuture] = updatedParams	
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
 	testSignerNumKeysLimits(crypto.Ed25519Type, 0, 0, 0)
 	testSignerNumKeysLimits(crypto.Ed25519Type, 0, 1, 1)
 	updatedParams.CompactCertRounds = 2
-	config.Consensus[protocol.ConsensusFuture] = updatedParams		
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
 	testSignerNumKeysLimits(crypto.Ed25519Type, 2, 2, 1)
 	updatedParams.CompactCertRounds = 10
-	config.Consensus[protocol.ConsensusFuture] = updatedParams		
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
 	testSignerNumKeysLimits(crypto.Ed25519Type, 8, 21, 2)
 	testSignerNumKeysLimits(crypto.Ed25519Type, 8, 20, 2)
 	testSignerNumKeysLimits(crypto.Ed25519Type, 10, 21, 2)
@@ -99,7 +99,7 @@ func TestSignerCreation(t *testing.T) {
 	testSignerNumKeysLimits(crypto.Ed25519Type, 11, 20, 1)
 
 	updatedParams.CompactCertRounds = 2
-	config.Consensus[protocol.ConsensusFuture] = updatedParams	
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
 	signer := generateTestSigner(crypto.FalconType, 2, 2, a)
 	defer signer.keyStore.store.Close()
 	a.Equal(1, length(signer, a))
@@ -225,7 +225,7 @@ func TestNonEmptyDisposableKeys(t *testing.T) {
 	partitiontest.PartitionTest(t)
 	a := require.New(t)
 
-	// TODO: replace ConsensusFuture with the current protocol once updated 
+	// TODO: replace ConsensusFuture with the current protocol once updated
 	origParams := config.Consensus[protocol.ConsensusFuture]
 	updatedParams := origParams
 	updatedParams.CompactCertRounds = 1
@@ -259,7 +259,7 @@ func TestSignatureStructure(t *testing.T) {
 	partitiontest.PartitionTest(t)
 	a := require.New(t)
 
-	// TODO: replace ConsensusFuture with the current protocol once updated 
+	// TODO: replace ConsensusFuture with the current protocol once updated
 	origParams := config.Consensus[protocol.ConsensusFuture]
 	updatedParams := origParams
 	updatedParams.CompactCertRounds = 1
@@ -297,7 +297,7 @@ func TestSigning(t *testing.T) {
 	partitiontest.PartitionTest(t)
 	a := require.New(t)
 
-	// TODO: replace ConsensusFuture with the current protocol once updated 
+	// TODO: replace ConsensusFuture with the current protocol once updated
 	origParams := config.Consensus[protocol.ConsensusFuture]
 	updatedParams := origParams
 	updatedParams.CompactCertRounds = 1
@@ -305,7 +305,7 @@ func TestSigning(t *testing.T) {
 	defer func() {
 		config.Consensus[protocol.ConsensusFuture] = origParams
 	}()
-	
+
 	start, end := uint64(50), uint64(100)
 	signer := generateTestSigner(crypto.FalconType, start, end, a)
 	defer signer.keyStore.store.Close()
@@ -323,7 +323,7 @@ func TestSigning(t *testing.T) {
 	a.Error(err)
 
 	updatedParams.CompactCertRounds = 10
-	config.Consensus[protocol.ConsensusFuture] = updatedParams	
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
 	signer = generateTestSigner(crypto.FalconType, start, end, a)
 	defer signer.keyStore.store.Close()
 
@@ -337,7 +337,7 @@ func TestSigning(t *testing.T) {
 
 	updatedParams.CompactCertRounds = 12
 	config.Consensus[protocol.ConsensusFuture] = updatedParams
-	
+
 	signer = generateTestSigner(crypto.FalconType, 50, 100, a)
 	defer signer.keyStore.store.Close()
 	a.Equal(length(signer, a), 4)
@@ -355,7 +355,7 @@ func TestSigning(t *testing.T) {
 
 	updatedParams.CompactCertRounds = 128
 	config.Consensus[protocol.ConsensusFuture] = updatedParams
-	
+
 	signer = generateTestSigner(crypto.FalconType, 234, 4634, a)
 	defer signer.keyStore.store.Close()
 	_, err = signer.keyStore.GetKey(256)
@@ -370,7 +370,7 @@ func TestBadRound(t *testing.T) {
 	partitiontest.PartitionTest(t)
 	a := require.New(t)
 
-	// TODO: replace ConsensusFuture with the current protocol once updated 
+	// TODO: replace ConsensusFuture with the current protocol once updated
 	origParams := config.Consensus[protocol.ConsensusFuture]
 	updatedParams := origParams
 	updatedParams.CompactCertRounds = 1
@@ -395,7 +395,7 @@ func TestBadMerkleProofInSignature(t *testing.T) {
 	partitiontest.PartitionTest(t)
 	a := require.New(t)
 
-	// TODO: replace ConsensusFuture with the current protocol once updated 
+	// TODO: replace ConsensusFuture with the current protocol once updated
 	origParams := config.Consensus[protocol.ConsensusFuture]
 	updatedParams := origParams
 	updatedParams.CompactCertRounds = 1
@@ -446,7 +446,7 @@ func TestIncorrectByteSignature(t *testing.T) {
 	partitiontest.PartitionTest(t)
 	a := require.New(t)
 
-	// TODO: replace ConsensusFuture with the current protocol once updated 
+	// TODO: replace ConsensusFuture with the current protocol once updated
 	origParams := config.Consensus[protocol.ConsensusFuture]
 	updatedParams := origParams
 	updatedParams.CompactCertRounds = 1
@@ -472,7 +472,7 @@ func TestAttemptToUseDifferentKey(t *testing.T) {
 	a := require.New(t)
 	var err error
 
-	// TODO: replace ConsensusFuture with the current protocol once updated 
+	// TODO: replace ConsensusFuture with the current protocol once updated
 	origParams := config.Consensus[protocol.ConsensusFuture]
 	updatedParams := origParams
 	updatedParams.CompactCertRounds = 1
@@ -499,7 +499,7 @@ func TestMarshal(t *testing.T) {
 	partitiontest.PartitionTest(t)
 	a := require.New(t)
 
-	// TODO: replace ConsensusFuture with the current protocol once updated 
+	// TODO: replace ConsensusFuture with the current protocol once updated
 	origParams := config.Consensus[protocol.ConsensusFuture]
 	updatedParams := origParams
 	updatedParams.CompactCertRounds = 1
@@ -600,7 +600,7 @@ func TestKeyDeletion(t *testing.T) {
 	a := require.New(t)
 	var err error
 
-	// TODO: replace ConsensusFuture with the current protocol once updated 
+	// TODO: replace ConsensusFuture with the current protocol once updated
 	origParams := config.Consensus[protocol.ConsensusFuture]
 	updatedParams := origParams
 	updatedParams.CompactCertRounds = 1
