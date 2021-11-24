@@ -649,25 +649,25 @@ func TestValidityPeriod(t *testing.T) {
 	// TODO: change to config.Consensus[protocol.ConsensusCurrentVersion].MaxKeyregValidPeriod when we reach that version
 	maxValidPeriod := config.Consensus[protocol.ConsensusFuture].MaxKeyregValidPeriod
 
-	store := initTestDB(a)
-	defer store.Close()
+	store1 := initTestDB(a)
+	defer store1.Close()
 	firstValid := uint64(0)
 	lastValid := maxValidPeriod
-	_, err := New(firstValid, lastValid, crypto.Ed25519Type, *store)
+	_, err := New(firstValid, lastValid, crypto.Ed25519Type, store1)
 	a.NoError(err)
 
-	store = initTestDB(a)
-	defer store.Close()
+	store2 := initTestDB(a)
+	defer store2.Close()
 	firstValid = uint64(0)
 	lastValid = maxValidPeriod + 1
-	_, err = New(firstValid, lastValid, crypto.Ed25519Type, *store)
+	_, err = New(firstValid, lastValid, crypto.Ed25519Type, store2)
 	a.Error(err)
 
-	store = initTestDB(a)
-	defer store.Close()
+	store3 := initTestDB(a)
+	defer store3.Close()
 	firstValid = uint64(0)
 	lastValid = maxValidPeriod - 1
-	_, err = New(firstValid, lastValid, crypto.Ed25519Type, *store)
+	_, err = New(firstValid, lastValid, crypto.Ed25519Type, store3)
 	a.NoError(err)
 }
 
@@ -677,31 +677,31 @@ func TestNumberOfGeneratedKeys(t *testing.T) {
 	interval := uint64(128)
 	validPeriod := uint64((1<<8)*interval - 1)
 
-	store := initTestDB(a)
-	defer store.Close()
+	store1 := initTestDB(a)
+	defer store1.Close()
 	firstValid := uint64(1000)
 	lastValid := validPeriod + 1000
-	s, err := New(firstValid, lastValid, crypto.Ed25519Type, *store)
+	s, err := New(firstValid, lastValid, crypto.Ed25519Type, store1)
 	a.NoError(err)
 	err = s.Persist()
 	a.NoError(err)
 	a.Equal(1<<8, length(s, a))
 
-	store = initTestDB(a)
-	defer store.Close()
+	store2 := initTestDB(a)
+	defer store2.Close()
 	firstValid = uint64(0)
 	lastValid = validPeriod
-	s, err = New(firstValid, lastValid, crypto.Ed25519Type, *store)
+	s, err = New(firstValid, lastValid, crypto.Ed25519Type, store2)
 	a.NoError(err)
 	err = s.Persist()
 	a.NoError(err)
 	a.Equal((1<<8)-1, length(s, a))
 
-	store = initTestDB(a)
-	defer store.Close()
+	store3 := initTestDB(a)
+	defer store3.Close()
 	firstValid = uint64(1000)
 	lastValid = validPeriod + 1000 - (interval * 50)
-	s, err = New(firstValid, lastValid, crypto.Ed25519Type, *store)
+	s, err = New(firstValid, lastValid, crypto.Ed25519Type, store3)
 	a.NoError(err)
 	err = s.Persist()
 	a.NoError(err)
@@ -726,7 +726,7 @@ func generateTestSignerAux(a *require.Assertions) (uint64, uint64, *Signer) {
 
 func generateTestSigner(t crypto.AlgorithmType, firstValid uint64, lastValid uint64, a *require.Assertions) *Signer {
 	store := initTestDB(a)
-	signer, err := New(firstValid, lastValid, t, *store)
+	signer, err := New(firstValid, lastValid, t, store)
 	a.NoError(err)
 
 	err = signer.Persist()
@@ -735,7 +735,7 @@ func generateTestSigner(t crypto.AlgorithmType, firstValid uint64, lastValid uin
 	return signer
 }
 
-func initTestDB(a *require.Assertions) *db.Accessor {
+func initTestDB(a *require.Assertions) db.Accessor {
 	tmpname := uuid.NewV4().String() // could this just be a constant string instead? does it even matter?
 	store, err := db.MakeAccessor(tmpname, false, true)
 	a.NoError(err)
@@ -750,7 +750,7 @@ func initTestDB(a *require.Assertions) *db.Accessor {
 	})
 	a.NoError(err)
 
-	return &store
+	return store
 }
 
 func length(s *Signer, a *require.Assertions) int {
