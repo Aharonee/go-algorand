@@ -646,14 +646,6 @@ func TestValidityPeriod(t *testing.T) {
 	partitiontest.PartitionTest(t)
 	a := require.New(t)
 
-	// TODO: replace ConsensusFuture with the current protocol once updated
-	origParams := config.Consensus[protocol.ConsensusFuture]
-	updatedParams := origParams
-	updatedParams.CompactCertRounds = 1
-	config.Consensus[protocol.ConsensusFuture] = updatedParams
-	defer func() {
-		config.Consensus[protocol.ConsensusFuture] = origParams
-	}()
 	// TODO: change to config.Consensus[protocol.ConsensusCurrentVersion].MaxKeyregValidPeriod when we reach that version
 	maxValidPeriod := config.Consensus[protocol.ConsensusFuture].MaxKeyregValidPeriod
 
