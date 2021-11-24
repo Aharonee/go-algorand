@@ -17,7 +17,9 @@
 package merklekeystore
 
 import (
+	"github.com/algorand/go-algorand/config"
 	"github.com/algorand/go-algorand/crypto"
+	"github.com/algorand/go-algorand/protocol"	
 	"github.com/algorand/go-algorand/test/partitiontest"
 	"github.com/stretchr/testify/require"
 	"testing"
@@ -27,7 +29,16 @@ func TestStoringKeys(t *testing.T) {
 	partitiontest.PartitionTest(t)
 	a := require.New(t)
 
-	s := generateTestSigner(crypto.FalconType, 0, 4096, 345, a)
+	// TODO: replace ConsensusFuture with the current protocol once updated 
+	origParams := config.Consensus[protocol.ConsensusFuture]
+	updatedParams := origParams
+	updatedParams.CompactCertRounds = 345
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
+	defer func() {
+		config.Consensus[protocol.ConsensusFuture] = origParams
+	}()
+
+	s := generateTestSigner(crypto.FalconType, 0, 4096, a)
 	k := s.keyStore
 	defer k.store.Close()
 
@@ -42,7 +53,16 @@ func TestDroppingKeys(t *testing.T) {
 	partitiontest.PartitionTest(t)
 	a := require.New(t)
 
-	s := generateTestSigner(crypto.FalconType, 25, 1023, 23, a)
+	// TODO: replace ConsensusFuture with the current protocol once updated 
+	origParams := config.Consensus[protocol.ConsensusFuture]
+	updatedParams := origParams
+	updatedParams.CompactCertRounds = 23
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
+	defer func() {
+		config.Consensus[protocol.ConsensusFuture] = origParams
+	}()
+
+	s := generateTestSigner(crypto.FalconType, 25, 1023, a)
 	k := s.keyStore
 	defer k.store.Close()
 
@@ -67,7 +87,16 @@ func TestPersistRestore(t *testing.T) {
 	partitiontest.PartitionTest(t)
 	a := require.New(t)
 
-	s := generateTestSigner(crypto.FalconType, 25, 1023, 23, a)
+	// TODO: replace ConsensusFuture with the current protocol once updated 
+	origParams := config.Consensus[protocol.ConsensusFuture]
+	updatedParams := origParams
+	updatedParams.CompactCertRounds = 23
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
+	defer func() {
+		config.Consensus[protocol.ConsensusFuture] = origParams
+	}()
+
+	s := generateTestSigner(crypto.FalconType, 25, 1023, a)
 	k := s.keyStore
 	defer k.store.Close()
 
@@ -82,7 +111,7 @@ func BenchmarkFetchKeys(b *testing.B) {
 	start := uint64(1)
 	end := uint64(3000000)
 	interval := uint64(128)
-	s := generateTestSigner(crypto.FalconType, start, end, interval, a)
+	s := generateTestSigner(crypto.FalconType, start, end, a)
 	defer s.keyStore.store.Close()
 	b.ResetTimer()
 
@@ -101,7 +130,7 @@ func BenchmarkTrimKeys(b *testing.B) {
 	start := uint64(1)
 	end := uint64(3000000)
 	interval := uint64(128)
-	s := generateTestSigner(crypto.FalconType, start, end, interval, a)
+	s := generateTestSigner(crypto.FalconType, start, end, a)
 	defer s.keyStore.store.Close()
 	b.ResetTimer()
 

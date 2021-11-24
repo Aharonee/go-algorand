@@ -47,39 +47,60 @@ func TestSignerCreation(t *testing.T) {
 	a := require.New(t)
 	var err error
 
+	// TODO: replace ConsensusFuture with the current protocol once updated
+	origParams := config.Consensus[protocol.ConsensusFuture]
+	updatedParams := origParams
+	updatedParams.CompactCertRounds = 1
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
+	defer func() {
+		config.Consensus[protocol.ConsensusFuture] = origParams
+	}()
+
 	h := genHashableForTest()
 	for i := uint64(1); i < 20; i++ {
-		signer := generateTestSigner(crypto.FalconType, i, i+1, 1, a)
+		signer := generateTestSigner(crypto.FalconType, i, i+1, a)
 		defer signer.keyStore.store.Close()
 		_, err = signer.Sign(h, i)
 		a.NoError(err)
 	}
 
-	testSignerNumKeysLimits := func(t crypto.AlgorithmType, firstValid uint64, lastValid uint64, interval uint64, expectedLen int) {
-		signer := generateTestSigner(t, firstValid, lastValid, interval, a)
+	testSignerNumKeysLimits := func(t crypto.AlgorithmType, firstValid uint64, lastValid uint64, expectedLen int) {
+		signer := generateTestSigner(t, firstValid, lastValid, a)
 		defer signer.keyStore.store.Close()
 		a.Equal(expectedLen, length(signer, a))
 	}
 
-	testSignerNumKeysLimits(crypto.FalconType, 0, 0, 1, 0)
-	testSignerNumKeysLimits(crypto.FalconType, 0, 1, 1, 1)
-	testSignerNumKeysLimits(crypto.FalconType, 2, 2, 2, 1)
-	testSignerNumKeysLimits(crypto.FalconType, 8, 21, 10, 2)
-	testSignerNumKeysLimits(crypto.FalconType, 8, 20, 10, 2)
-	testSignerNumKeysLimits(crypto.FalconType, 10, 21, 10, 2)
-	testSignerNumKeysLimits(crypto.FalconType, 10, 20, 10, 2)
-	testSignerNumKeysLimits(crypto.FalconType, 11, 20, 10, 1)
+	testSignerNumKeysLimits(crypto.FalconType, 0, 0, 0)
+	testSignerNumKeysLimits(crypto.FalconType, 0, 1, 1)
+	updatedParams.CompactCertRounds = 2
+	config.Consensus[protocol.ConsensusFuture] = updatedParams	
+	testSignerNumKeysLimits(crypto.FalconType, 2, 2, 1)
+	updatedParams.CompactCertRounds = 10
+	config.Consensus[protocol.ConsensusFuture] = updatedParams	
+	testSignerNumKeysLimits(crypto.FalconType, 8, 21, 2)
+	testSignerNumKeysLimits(crypto.FalconType, 8, 20, 2)
+	testSignerNumKeysLimits(crypto.FalconType, 10, 21, 2)
+	testSignerNumKeysLimits(crypto.FalconType, 10, 20, 2)
+	testSignerNumKeysLimits(crypto.FalconType, 11, 20, 1)
 
-	testSignerNumKeysLimits(crypto.Ed25519Type, 0, 0, 1, 0)
-	testSignerNumKeysLimits(crypto.Ed25519Type, 0, 1, 1, 1)
-	testSignerNumKeysLimits(crypto.Ed25519Type, 2, 2, 2, 1)
-	testSignerNumKeysLimits(crypto.Ed25519Type, 8, 21, 10, 2)
-	testSignerNumKeysLimits(crypto.Ed25519Type, 8, 20, 10, 2)
-	testSignerNumKeysLimits(crypto.Ed25519Type, 10, 21, 10, 2)
-	testSignerNumKeysLimits(crypto.Ed25519Type, 10, 20, 10, 2)
-	testSignerNumKeysLimits(crypto.Ed25519Type, 11, 20, 10, 1)
+	updatedParams.CompactCertRounds = 1
+	config.Consensus[protocol.ConsensusFuture] = updatedParams	
+	testSignerNumKeysLimits(crypto.Ed25519Type, 0, 0, 0)
+	testSignerNumKeysLimits(crypto.Ed25519Type, 0, 1, 1)
+	updatedParams.CompactCertRounds = 2
+	config.Consensus[protocol.ConsensusFuture] = updatedParams		
+	testSignerNumKeysLimits(crypto.Ed25519Type, 2, 2, 1)
+	updatedParams.CompactCertRounds = 10
+	config.Consensus[protocol.ConsensusFuture] = updatedParams		
+	testSignerNumKeysLimits(crypto.Ed25519Type, 8, 21, 2)
+	testSignerNumKeysLimits(crypto.Ed25519Type, 8, 20, 2)
+	testSignerNumKeysLimits(crypto.Ed25519Type, 10, 21, 2)
+	testSignerNumKeysLimits(crypto.Ed25519Type, 10, 20, 2)
+	testSignerNumKeysLimits(crypto.Ed25519Type, 11, 20, 1)
 
-	signer := generateTestSigner(crypto.FalconType, 2, 2, 2, a)
+	updatedParams.CompactCertRounds = 2
+	config.Consensus[protocol.ConsensusFuture] = updatedParams	
+	signer := generateTestSigner(crypto.FalconType, 2, 2, a)
 	defer signer.keyStore.store.Close()
 	a.Equal(1, length(signer, a))
 
@@ -87,13 +108,17 @@ func TestSignerCreation(t *testing.T) {
 	a.NoError(err)
 	a.NoError(signer.GetVerifier().Verify(2, 2, 2, genHashableForTest(), sig))
 
-	signer = generateTestSigner(crypto.FalconType, 2, 2, 3, a)
+	updatedParams.CompactCertRounds = 3
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
+	signer = generateTestSigner(crypto.FalconType, 2, 2, a)
 	defer signer.keyStore.store.Close()
 	a.Equal(0, length(signer, a))
 	_, err = signer.Sign(genHashableForTest(), 2)
 	a.Error(err)
 
-	signer = generateTestSigner(crypto.FalconType, 11, 19, 10, a)
+	updatedParams.CompactCertRounds = 10
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
+	signer = generateTestSigner(crypto.FalconType, 11, 19, a)
 	defer signer.keyStore.store.Close()
 	a.Equal(0, length(signer, a))
 	_, err = signer.Sign(genHashableForTest(), 2)
@@ -103,7 +128,16 @@ func TestEmptyVerifier(t *testing.T) {
 	partitiontest.PartitionTest(t)
 	a := require.New(t)
 
-	signer := generateTestSigner(crypto.FalconType, 8, 9, 5, a)
+	// TODO: replace ConsensusFuture with the current protocol once updated
+	origParams := config.Consensus[protocol.ConsensusFuture]
+	updatedParams := origParams
+	updatedParams.CompactCertRounds = 5
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
+	defer func() {
+		config.Consensus[protocol.ConsensusFuture] = origParams
+	}()
+
+	signer := generateTestSigner(crypto.FalconType, 8, 9, a)
 	defer signer.keyStore.store.Close()
 	a.Equal(signer.GetVerifier().IsEmpty(), true)
 }
@@ -113,8 +147,17 @@ func TestEmptySigner(t *testing.T) {
 	a := require.New(t)
 	var err error
 
+	// TODO: replace ConsensusFuture with the current protocol once updated
+	origParams := config.Consensus[protocol.ConsensusFuture]
+	updatedParams := origParams
+	updatedParams.CompactCertRounds = 5
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
+	defer func() {
+		config.Consensus[protocol.ConsensusFuture] = origParams
+	}()
+
 	h := genHashableForTest()
-	signer := generateTestSigner(crypto.FalconType, 8, 9, 5, a)
+	signer := generateTestSigner(crypto.FalconType, 8, 9, a)
 	defer signer.keyStore.store.Close()
 	a.NoError(err)
 	a.Equal(0, length(signer, a))
@@ -134,7 +177,16 @@ func TestDisposableKeysGeneration(t *testing.T) {
 	a := require.New(t)
 	var err error
 
-	signer := generateTestSigner(crypto.FalconType, 0, 100, 1, a)
+	// TODO: replace ConsensusFuture with the current protocol once updated
+	origParams := config.Consensus[protocol.ConsensusFuture]
+	updatedParams := origParams
+	updatedParams.CompactCertRounds = 1
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
+	defer func() {
+		config.Consensus[protocol.ConsensusFuture] = origParams
+	}()
+
+	signer := generateTestSigner(crypto.FalconType, 0, 100, a)
 	defer signer.keyStore.store.Close()
 	for i := uint64(1); i < 100; i++ {
 		_, err = signer.keyStore.GetKey(i)
@@ -144,7 +196,7 @@ func TestDisposableKeysGeneration(t *testing.T) {
 	_, err = signer.keyStore.GetKey(101)
 	a.Error(err)
 
-	signer = generateTestSigner(crypto.FalconType, 1000, 1100, 1, a)
+	signer = generateTestSigner(crypto.FalconType, 1000, 1100, a)
 	defer signer.keyStore.store.Close()
 	for i := uint64(1000); i < 1100; i++ {
 		_, err = signer.keyStore.GetKey(i)
@@ -154,7 +206,9 @@ func TestDisposableKeysGeneration(t *testing.T) {
 	_, err = signer.keyStore.GetKey(999)
 	a.Error(err)
 
-	signer = generateTestSigner(crypto.FalconType, 1000, 1100, 101, a)
+	updatedParams.CompactCertRounds = 101
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
+	signer = generateTestSigner(crypto.FalconType, 1000, 1100, a)
 	defer signer.keyStore.store.Close()
 	intervalRounds := make([]uint64, 0)
 	for i := uint64(1000); i <= 1100; i++ {
@@ -171,7 +225,16 @@ func TestNonEmptyDisposableKeys(t *testing.T) {
 	partitiontest.PartitionTest(t)
 	a := require.New(t)
 
-	signer := generateTestSigner(crypto.FalconType, 0, 100, 1, a)
+	// TODO: replace ConsensusFuture with the current protocol once updated 
+	origParams := config.Consensus[protocol.ConsensusFuture]
+	updatedParams := origParams
+	updatedParams.CompactCertRounds = 1
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
+	defer func() {
+		config.Consensus[protocol.ConsensusFuture] = origParams
+	}()
+
+	signer := generateTestSigner(crypto.FalconType, 0, 100, a)
 	defer signer.keyStore.store.Close()
 
 	s := crypto.GenericSigningKey{}
@@ -181,7 +244,7 @@ func TestNonEmptyDisposableKeys(t *testing.T) {
 		a.NotEqual(s, key)
 	}
 
-	signer = generateTestSigner(crypto.Ed25519Type, 0, 100, 1, a)
+	signer = generateTestSigner(crypto.Ed25519Type, 0, 100, a)
 	defer signer.keyStore.store.Close()
 
 	s = crypto.GenericSigningKey{}
@@ -196,7 +259,16 @@ func TestSignatureStructure(t *testing.T) {
 	partitiontest.PartitionTest(t)
 	a := require.New(t)
 
-	signer := generateTestSigner(crypto.FalconType, 50, 100, 1, a)
+	// TODO: replace ConsensusFuture with the current protocol once updated 
+	origParams := config.Consensus[protocol.ConsensusFuture]
+	updatedParams := origParams
+	updatedParams.CompactCertRounds = 1
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
+	defer func() {
+		config.Consensus[protocol.ConsensusFuture] = origParams
+	}()
+
+	signer := generateTestSigner(crypto.FalconType, 50, 100, a)
 	defer signer.keyStore.store.Close()
 
 	hashable := genHashableForTest()
@@ -225,8 +297,17 @@ func TestSigning(t *testing.T) {
 	partitiontest.PartitionTest(t)
 	a := require.New(t)
 
+	// TODO: replace ConsensusFuture with the current protocol once updated 
+	origParams := config.Consensus[protocol.ConsensusFuture]
+	updatedParams := origParams
+	updatedParams.CompactCertRounds = 1
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
+	defer func() {
+		config.Consensus[protocol.ConsensusFuture] = origParams
+	}()
+	
 	start, end := uint64(50), uint64(100)
-	signer := generateTestSigner(crypto.FalconType, start, end, 1, a)
+	signer := generateTestSigner(crypto.FalconType, start, end, a)
 	defer signer.keyStore.store.Close()
 
 	hashable := genHashableForTest()
@@ -241,7 +322,9 @@ func TestSigning(t *testing.T) {
 	_, err = signer.Sign(hashable, end+1)
 	a.Error(err)
 
-	signer = generateTestSigner(crypto.FalconType, start, end, 10, a)
+	updatedParams.CompactCertRounds = 10
+	config.Consensus[protocol.ConsensusFuture] = updatedParams	
+	signer = generateTestSigner(crypto.FalconType, start, end, a)
 	defer signer.keyStore.store.Close()
 
 	sig, err = signer.Sign(hashable, start)
@@ -252,7 +335,10 @@ func TestSigning(t *testing.T) {
 	a.Error(err)
 	a.Error(signer.GetVerifier().Verify(start, start+5, 1, hashable, sig))
 
-	signer = generateTestSigner(crypto.FalconType, 50, 100, 12, a)
+	updatedParams.CompactCertRounds = 12
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
+	
+	signer = generateTestSigner(crypto.FalconType, 50, 100, a)
 	defer signer.keyStore.store.Close()
 	a.Equal(length(signer, a), 4)
 
@@ -267,7 +353,10 @@ func TestSigning(t *testing.T) {
 		}
 	}
 
-	signer = generateTestSigner(crypto.FalconType, 234, 4634, 128, a)
+	updatedParams.CompactCertRounds = 128
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
+	
+	signer = generateTestSigner(crypto.FalconType, 234, 4634, a)
 	defer signer.keyStore.store.Close()
 	_, err = signer.keyStore.GetKey(256)
 	a.NoError(err)
@@ -280,6 +369,15 @@ func TestSigning(t *testing.T) {
 func TestBadRound(t *testing.T) {
 	partitiontest.PartitionTest(t)
 	a := require.New(t)
+
+	// TODO: replace ConsensusFuture with the current protocol once updated 
+	origParams := config.Consensus[protocol.ConsensusFuture]
+	updatedParams := origParams
+	updatedParams.CompactCertRounds = 1
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
+	defer func() {
+		config.Consensus[protocol.ConsensusFuture] = origParams
+	}()
 
 	start, _, signer := generateTestSignerAux(a)
 	defer signer.keyStore.store.Close()
@@ -296,6 +394,15 @@ func TestBadRound(t *testing.T) {
 func TestBadMerkleProofInSignature(t *testing.T) {
 	partitiontest.PartitionTest(t)
 	a := require.New(t)
+
+	// TODO: replace ConsensusFuture with the current protocol once updated 
+	origParams := config.Consensus[protocol.ConsensusFuture]
+	updatedParams := origParams
+	updatedParams.CompactCertRounds = 1
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
+	defer func() {
+		config.Consensus[protocol.ConsensusFuture] = origParams
+	}()
 
 	start, _, signer := generateTestSignerAux(a)
 	defer signer.keyStore.store.Close()
@@ -339,6 +446,15 @@ func TestIncorrectByteSignature(t *testing.T) {
 	partitiontest.PartitionTest(t)
 	a := require.New(t)
 
+	// TODO: replace ConsensusFuture with the current protocol once updated 
+	origParams := config.Consensus[protocol.ConsensusFuture]
+	updatedParams := origParams
+	updatedParams.CompactCertRounds = 1
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
+	defer func() {
+		config.Consensus[protocol.ConsensusFuture] = origParams
+	}()
+
 	start, _, signer := generateTestSignerAux(a)
 	defer signer.keyStore.store.Close()
 	hashable, sig := makeSig(signer, start, a)
@@ -355,6 +471,15 @@ func TestAttemptToUseDifferentKey(t *testing.T) {
 	partitiontest.PartitionTest(t)
 	a := require.New(t)
 	var err error
+
+	// TODO: replace ConsensusFuture with the current protocol once updated 
+	origParams := config.Consensus[protocol.ConsensusFuture]
+	updatedParams := origParams
+	updatedParams.CompactCertRounds = 1
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
+	defer func() {
+		config.Consensus[protocol.ConsensusFuture] = origParams
+	}()
 
 	start, _, signer := generateTestSignerAux(a)
 	defer signer.keyStore.store.Close()
@@ -374,7 +499,16 @@ func TestMarshal(t *testing.T) {
 	partitiontest.PartitionTest(t)
 	a := require.New(t)
 
-	signer := generateTestSigner(crypto.FalconType, 0, 10, 1, a)
+	// TODO: replace ConsensusFuture with the current protocol once updated 
+	origParams := config.Consensus[protocol.ConsensusFuture]
+	updatedParams := origParams
+	updatedParams.CompactCertRounds = 1
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
+	defer func() {
+		config.Consensus[protocol.ConsensusFuture] = origParams
+	}()
+
+	signer := generateTestSigner(crypto.FalconType, 0, 10, a)
 	store := signer.keyStore.store
 	defer store.Close()
 
@@ -396,7 +530,16 @@ func TestSignerTrim(t *testing.T) {
 	a := require.New(t)
 	var err error
 
-	signer := generateTestSigner(crypto.FalconType, 1, 100, 1, a)
+	// TODO: replace ConsensusFuture with the current protocol once updated
+	origParams := config.Consensus[protocol.ConsensusFuture]
+	updatedParams := origParams
+	updatedParams.CompactCertRounds = 1
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
+	defer func() {
+		config.Consensus[protocol.ConsensusFuture] = origParams
+	}()
+
+	signer := generateTestSigner(crypto.FalconType, 1, 100, a)
 	defer signer.keyStore.store.Close()
 
 	_, err = signer.Trim(1)
@@ -411,7 +554,9 @@ func TestSignerTrim(t *testing.T) {
 	signer.Trim(20)
 	a.Equal(length(signer, a), 80)
 
-	signer = generateTestSigner(crypto.FalconType, 1, 100, 11, a)
+	updatedParams.CompactCertRounds = 11
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
+	signer = generateTestSigner(crypto.FalconType, 1, 100, a)
 	defer signer.keyStore.store.Close()
 	a.Equal(9, length(signer, a))
 
@@ -430,7 +575,9 @@ func TestSignerTrim(t *testing.T) {
 	a.Equal(length(signer, a), 0)
 
 	// create signer and delete all keys.
-	signer = generateTestSigner(crypto.FalconType, 1, 60, 1, a)
+	updatedParams.CompactCertRounds = 1
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
+	signer = generateTestSigner(crypto.FalconType, 1, 60, a)
 	defer signer.keyStore.store.Close()
 	_, err = signer.Trim(60)
 	a.NoError(err)
@@ -439,7 +586,9 @@ func TestSignerTrim(t *testing.T) {
 	a.NoError(err)
 	a.Equal(0, length(signer, a))
 
-	signer = generateTestSigner(crypto.FalconType, 1, 60, 11, a)
+	updatedParams.CompactCertRounds = 11
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
+	signer = generateTestSigner(crypto.FalconType, 1, 60, a)
 	defer signer.keyStore.store.Close()
 	_, err = signer.Trim(55)
 	a.NoError(err)
@@ -451,7 +600,16 @@ func TestKeyDeletion(t *testing.T) {
 	a := require.New(t)
 	var err error
 
-	signer := generateTestSigner(crypto.FalconType, 1, 60, 1, a)
+	// TODO: replace ConsensusFuture with the current protocol once updated 
+	origParams := config.Consensus[protocol.ConsensusFuture]
+	updatedParams := origParams
+	updatedParams.CompactCertRounds = 1
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
+	defer func() {
+		config.Consensus[protocol.ConsensusFuture] = origParams
+	}()
+
+	signer := generateTestSigner(crypto.FalconType, 1, 60, a)
 	defer signer.keyStore.store.Close()
 
 	signer.Trim(50)
@@ -465,7 +623,9 @@ func TestKeyDeletion(t *testing.T) {
 		a.NoError(signer.GetVerifier().Verify(1, i, 1, genHashableForTest(), sig))
 	}
 
-	signer = generateTestSigner(crypto.FalconType, 1, 60, 11, a)
+	updatedParams.CompactCertRounds = 11
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
+	signer = generateTestSigner(crypto.FalconType, 1, 60, a)
 	defer signer.keyStore.store.Close()
 
 	signer.Trim(50)
@@ -486,6 +646,14 @@ func TestValidityPeriod(t *testing.T) {
 	partitiontest.PartitionTest(t)
 	a := require.New(t)
 
+	// TODO: replace ConsensusFuture with the current protocol once updated
+	origParams := config.Consensus[protocol.ConsensusFuture]
+	updatedParams := origParams
+	updatedParams.CompactCertRounds = 1
+	config.Consensus[protocol.ConsensusFuture] = updatedParams
+	defer func() {
+		config.Consensus[protocol.ConsensusFuture] = origParams
+	}()
 	// TODO: change to config.Consensus[protocol.ConsensusCurrentVersion].MaxKeyregValidPeriod when we reach that version
 	maxValidPeriod := config.Consensus[protocol.ConsensusFuture].MaxKeyregValidPeriod
 
@@ -560,11 +728,11 @@ func makeSig(signer *Signer, sigRound uint64, a *require.Assertions) (crypto.Has
 
 func generateTestSignerAux(a *require.Assertions) (uint64, uint64, *Signer) {
 	start, end := uint64(50), uint64(100)
-	signer := generateTestSigner(crypto.FalconType, start, end, 1, a)
+	signer := generateTestSigner(crypto.FalconType, start, end, a)
 	return start, end, signer
 }
 
-func generateTestSigner(t crypto.AlgorithmType, firstValid uint64, lastValid uint64, interval uint64, a *require.Assertions) *Signer {
+func generateTestSigner(t crypto.AlgorithmType, firstValid uint64, lastValid uint64, a *require.Assertions) *Signer {
 	store := initTestDB(a)
 	signer, err := New(firstValid, lastValid, t, *store)
 	a.NoError(err)
