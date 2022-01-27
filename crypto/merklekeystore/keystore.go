@@ -140,7 +140,7 @@ func (s *SignerContext) GetVerifier() *Verifier {
 }
 
 // Sign outputs a signature + proof for the signing key.
-func (s *Signer) Sign(hashable crypto.Hashable) (Signature, error) {
+func (s *Signer) Sign(msg []byte) (Signature, error) {
 	key := s.SigningKey
 	// Possible since there may not be a StateProof key for this specific round
 	if key == nil {
@@ -158,7 +158,7 @@ func (s *Signer) Sign(hashable crypto.Hashable) (Signature, error) {
 		return Signature{}, err
 	}
 
-	sig, err := signingKey.Sign(hashable)
+	sig, err := signingKey.SignBytes(msg)
 	if err != nil {
 		return Signature{}, err
 	}
@@ -201,7 +201,7 @@ func (v *Verifier) IsEmpty() bool {
 }
 
 // Verify receives a signature over a specific crypto.Hashable object, and makes certain the signature is correct.
-func (v *Verifier) Verify(round uint64, msg crypto.Hashable, sig Signature) error {
+func (v *Verifier) Verify(round uint64, msg []byte, sig Signature) error {
 
 	ephkey := CommittablePublicKey{
 		VerifyingKey: sig.VerifyingKey,
@@ -220,7 +220,7 @@ func (v *Verifier) Verify(round uint64, msg crypto.Hashable, sig Signature) erro
 	}
 
 	// verify that the signature is valid under the ephemeral public key
-	return sig.VerifyingKey.GetVerifier().Verify(msg, sig.ByteSignature)
+	return sig.VerifyingKey.GetVerifier().VerifyBytes(msg, sig.ByteSignature)
 }
 
 // GetFixedLengthHashableRepresentation returns the signature as a hashable byte sequence.
