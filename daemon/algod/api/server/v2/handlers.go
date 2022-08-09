@@ -1253,8 +1253,16 @@ func (v2 *Handlers) GetStateProof(ctx echo.Context, round uint64) error {
 		return internalError(ctx, err, err.Error(), v2.Log)
 	}
 
+	message := generated.Message{
+		BlockHeadersCommitment: tx.Message.BlockHeadersCommitment,
+		FirstAttestedRound:     tx.Message.FirstAttestedRound,
+		LastAttestedRound:      tx.Message.LastAttestedRound,
+		LnProvenWeight:         tx.Message.LnProvenWeight,
+		VotersCommitment:       tx.Message.VotersCommitment,
+	}
+
 	response := generated.StateProofResponse{
-		Message:    protocol.Encode(&tx.Message),
+		Message:    message,
 		StateProof: protocol.Encode(&tx.StateProof),
 	}
 
