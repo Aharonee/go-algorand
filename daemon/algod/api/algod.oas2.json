@@ -2750,7 +2750,7 @@
           "format": "byte"
         }
       }
-    },
+    }
   },
   "parameters": {
     "account-id": {

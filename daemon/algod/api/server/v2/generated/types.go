@@ -379,25 +379,6 @@ type LightBlockHeaderProof struct {
 	Treedepth uint64 `json:"treedepth"`
 }
 
-// Message defines model for Message.
-type Message struct {
-
-	// The vector commitment on all light block headers within a state proof interval.
-	BlockHeadersCommitment []byte `json:"BlockHeadersCommitment"`
-
-	// The first round the message attests to.
-	FirstAttestedRound uint64 `json:"FirstAttestedRound"`
-
-	// The last round the message attests to.
-	LastAttestedRound uint64 `json:"LastAttestedRound"`
-
-	// The result of the invoking ln function on the proven weight.
-	LnProvenWeight uint64 `json:"LnProvenWeight"`
-
-	// The vector commitment of the top N accounts to sign the next StateProof.
-	VotersCommitment []byte `json:"VotersCommitment"`
-}
-
 // ParticipationKey defines model for ParticipationKey.
 type ParticipationKey struct {
 
@@ -479,7 +460,23 @@ type StateDelta []EvalDeltaKeyValue
 type StateProof struct {
 
 	// Represents the message that the state proofs are attesting to.
-	Message Message `json:"Message"`
+	Message struct {
+
+		// The vector commitment on all light block headers within a state proof interval.
+		BlockHeadersCommitment []byte `json:"BlockHeadersCommitment"`
+
+		// The first round the message attests to.
+		FirstAttestedRound uint64 `json:"FirstAttestedRound"`
+
+		// The last round the message attests to.
+		LastAttestedRound uint64 `json:"LastAttestedRound"`
+
+		// The result of the invoking ln function on the proven weight.
+		LnProvenWeight uint64 `json:"LnProvenWeight"`
+
+		// The vector commitment of the top N accounts to sign the next StateProof.
+		VotersCommitment []byte `json:"VotersCommitment"`
+	} `json:"Message"`
 
 	// The encoded StateProof for the message.
 	StateProof []byte `json:"StateProof"`
